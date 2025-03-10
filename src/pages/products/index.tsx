@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Head from "next/head";
 import Link from "next/link";
+import useSWR from "swr";
 
 // Define the Product type
 interface Product {
@@ -16,30 +17,33 @@ interface Product {
   };
 }
 
+// Fetch function for SWR
+const fetcher = async (url: string) => {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Error fetching data.");
+  }
+  return response.json();
+};
+
 const ProductsPage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
+  const { data, error } = useSWR("https://fakestoreapi.com/products", fetcher);
 
-  useEffect(() => {
-    // Fetch the product data from the FakeStore API
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch("https://fakestoreapi.com/products");
-        const data = await response.json();
-        setProducts(data);
-      } catch (err) {
-        setError("Error fetching data.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (error) {
+    return (
+      <p className="w-full h-screen absolute top-0 flex justify-center text-red-600 items-center text-3xl">
+        Error fetching data.
+      </p>
+    );
+  }
 
-    fetchProducts();
-  }, []);
-
-  if (loading) return <p className="text-center">Loading products...</p>;
-  if (error) return <p className="text-center">{error}</p>;
+  if (!data) {
+    return (
+      <p className="w-full bg-black/80 h-screen absolute top-0 flex justify-center items-center text-3xl text-white">
+        Loading products...
+      </p>
+    );
+  }
 
   return (
     <>
@@ -50,9 +54,8 @@ const ProductsPage = () => {
       <div className="p-8 max-w-6xl mx-auto">
         <h1 className="text-4xl font-bold text-center mb-6">Our Products</h1>
 
-        {/* Products Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {products.map((product) => (
+          {data.map((product: Product) => (
             <div
               key={product.id}
               className="border rounded-lg overflow-hidden shadow-lg bg-white"
@@ -60,10 +63,10 @@ const ProductsPage = () => {
               <img
                 src={product.image}
                 alt={product.title}
-                className="w-full h-56 object-cover"
+                className="w-full h-56 object-fill p-2"
               />
               <div className="p-4">
-                <h3 className="text-xl font-semibold text-gray-800">
+                <h3 className="text-xl font-semibold text-gray-800 line-clamp-2">
                   {product.title}
                 </h3>
                 <p className="text-sm text-gray-600 mt-2">{product.category}</p>
@@ -79,7 +82,7 @@ const ProductsPage = () => {
                     ({product.rating.count} reviews)
                   </span>
                 </div>
-                <p className="text-sm text-gray-700 mt-3">
+                <p className="text-sm text-gray-700 mt-3 line-clamp-4">
                   {product.description}
                 </p>
                 <div className="mt-4">

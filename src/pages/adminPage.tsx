@@ -16,6 +16,7 @@ export default function AdminPanel() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const logsQuery = query(
@@ -30,6 +31,7 @@ export default function AdminPanel() {
 
       const total = fetchedLogs.reduce((sum, log) => sum + log.count, 0);
       setTotalCount(total);
+      setLoading(false); // Set loading to false after data is fetched
     });
 
     return () => unsubscribe();
@@ -105,58 +107,68 @@ export default function AdminPanel() {
       <Head>
         <title>Admin Panel</title>
       </Head>
-      <div className="p-5">
-        <h1 className="text-xl font-bold mb-4">Admin Panel</h1>
-        <p className="text-lg">
+      <div>
+        <h1 className="text-xl font-bold mb-4 px-6">Admin Panel</h1>
+        <p className="text-lg px-6">
           Total View Count: <strong>{totalCount}</strong>
         </p>
 
-        <h2 className="text-lg font-semibold mt-5 mb-2">Product View Count</h2>
+        <h2 className="text-lg font-semibold mt-5 mb-2 px-6">Product View Count</h2>
 
-        <table className="w-full border-collapse border border-gray-300 mt-3">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="border border-gray-300 p-2">Product ID</th>
-              <th className="border border-gray-300 p-2">Product Title</th>
-              <th className="border border-gray-300 p-2">Product URL</th>
-              <th
-                className="border border-gray-300 p-2 cursor-pointer"
-                onClick={handleSort}
-              >
-                View Count
-                {sortOrder === "desc" ? " ↓" : " ↑"}
-              </th>
-              <th className="border border-gray-300 p-2">Last View</th>
-            </tr>
-          </thead>
-          <tbody>
-            {logs.map((log, index) => (
-              <tr key={index} className="text-center">
-                <td className="border border-gray-300 p-2">{log.productId}</td>
-                <td className="border border-gray-300 p-2">
-                  {log.productTitle}
-                </td>
-                <td className="border border-gray-300 p-2">
-                  <a
-                    href={log.productUrl}
-                    className="text-blue-600"
-                    target="_blank"
-                  >
-                    View Product
-                  </a>
-                </td>
-                <td className="border border-gray-300 p-2">{log.count}</td>
-                <td className="border border-gray-300 p-2">
-                  {formatDate(log.timestamp)}
-                </td>
+        {loading ? (
+          <div className="w-full h-screen absolute top-0 flex justify-center items-center bg-black/80">
+              <p className="text-3xl text-white font-semibold">
+                Loading Table...
+              </p>
+          </div>
+        ) : (
+          <table className="w-[95%] m-auto border-collapse border border-gray-300 mt-3">
+            <thead>
+              <tr className="bg-gray-200">
+                <th className="border border-gray-300 p-2">Product ID</th>
+                <th className="border border-gray-300 p-2">Product Title</th>
+                <th className="border border-gray-300 p-2">Product URL</th>
+                <th
+                  className="border border-gray-300 p-2 cursor-pointer"
+                  onClick={handleSort}
+                >
+                  View Count
+                  {sortOrder === "desc" ? " ↓" : " ↑"}
+                </th>
+                <th className="border border-gray-300 p-2">Last View</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {logs.map((log, index) => (
+                <tr key={index} className="text-center">
+                  <td className="border border-gray-300 p-2">
+                    {log.productId}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    {log.productTitle}
+                  </td>
+                  <td className="border border-gray-300 p-2">
+                    <a
+                      href={log.productUrl}
+                      className="text-blue-600"
+                      target="_blank"
+                    >
+                      View Product
+                    </a>
+                  </td>
+                  <td className="border border-gray-300 p-2">{log.count}</td>
+                  <td className="border border-gray-300 p-2">
+                    {formatDate(log.timestamp)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
 
         <button
           onClick={handleDownloadExcel}
-          className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
+          className="m-6 bg-green-500 text-white px-6 py-2 rounded "
         >
           Download Excel File
         </button>

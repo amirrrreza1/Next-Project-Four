@@ -4,7 +4,7 @@ const HomePage = () => {
   return (
     <>
       <Head>
-        <title>توضیحات پروژه</title>
+        <title>Home</title>
       </Head>
 
       <div className="p-8 max-w-4xl mx-auto" style={{ direction: "rtl" }}>

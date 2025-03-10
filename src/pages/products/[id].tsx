@@ -34,20 +34,27 @@ const ProductDetail = () => {
 
   if (error)
     return (
-      <div className="text-red-500 text-center mt-8">Product not found!</div>
+      <div className="w-full h-screen absolute top-0 bg-black/80 flex justify-center items-center text-3xl text-red-600">
+        Product not found!
+      </div>
     );
-  if (!data) return <div className="text-center mt-8">Loading...</div>;
+  if (!data) return (
+    <div className="w-full h-screen absolute top-0 bg-black/80 flex justify-center items-center text-3xl text-white">
+      Loading...
+    </div>
+  );
 
   return (
     <>
       <Head>
+        <title>Product {data.id}</title>
         <title>Product {data.id}</title>
       </Head>
 
       <div className="max-w-4xl mx-auto p-6">
         <h1 className="text-3xl font-bold text-center mb-4">{data.title}</h1>
 
-        <div className="bg-white shadow-md rounded-lg p-6">
+        <div className="p-6">
           <div className="flex justify-center mb-6">
             <img
               src={data.image}
@@ -64,15 +71,6 @@ const ProductDetail = () => {
               Rating: {data.rating.rate} ({data.rating.count} reviews)
             </p>
           </div>
-
-          <a
-            href={data.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-block bg-blue-500 text-white py-2 px-4 rounded-full hover:bg-blue-600 transition"
-          >
-            View on Store
-          </a>
         </div>
       </div>
     </>

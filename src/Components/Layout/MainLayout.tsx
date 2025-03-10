@@ -20,8 +20,8 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
               href={item.href}
               className={
                 item.href === router.pathname
-                  ? "text-white h-15 leading-15 border-b-2"
-                  : "text-black"
+                  ? "text-white h-15 leading-15 border-b-2 opacity-100"
+                  : "text-white h-15 leading-15 opacity-50"
               }
             >
               {item.name}
