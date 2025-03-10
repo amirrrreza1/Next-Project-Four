@@ -14,11 +14,10 @@ interface LogEntry {
 
 export default function AdminPanel() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(0); // مجموع تعداد بازدیدها
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc"); // تایپ صحیح برای ترتیب مرتب‌سازی
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   useEffect(() => {
-    // اطمینان از دریافت داده‌ها به صورت مرتب‌شده بر اساس count
     const logsQuery = query(
       collection(db, "logs"),
       orderBy("count", sortOrder)
@@ -29,7 +28,6 @@ export default function AdminPanel() {
       }));
       setLogs(fetchedLogs);
 
-      // محاسبه مجموع تعداد count ها
       const total = fetchedLogs.reduce((sum, log) => sum + log.count, 0);
       setTotalCount(total);
     });
@@ -38,17 +36,17 @@ export default function AdminPanel() {
   }, [sortOrder]);
 
   const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString("fa-IR");
+    return new Date(timestamp).toLocaleString("en-US");
   };
 
   const handleDownloadExcel = () => {
     const dataToExport = logs.map(
       ({ productId, productTitle, productUrl, count, timestamp }) => ({
-        "شناسه محصول": productId,
-        "عنوان محصول": productTitle,
-        "لینک محصول": productUrl,
-        "تعداد بازدید": count,
-        "تاریخ آخرین بازدید": formatDate(timestamp),
+        "Product ID": productId,
+        "Product Title": productTitle,
+        "Product URL": productUrl,
+        "View Count": count,
+        "Last View": formatDate(timestamp),
       })
     );
 
@@ -58,7 +56,6 @@ export default function AdminPanel() {
     XLSX.writeFile(wb, "logs.xlsx");
   };
 
-  // تغییر ترتیب مرتب‌سازی
   const handleSort = () => {
     setSortOrder(sortOrder === "desc" ? "asc" : "desc");
   };
@@ -69,31 +66,27 @@ export default function AdminPanel() {
         <title>Admin Panel</title>
       </Head>
       <div className="p-5">
-        <h1 className="text-xl font-bold mb-4">پنل ادمین</h1>
-        {/* نمایش مجموع تعداد بازدیدها */}
+        <h1 className="text-xl font-bold mb-4">Admin Panel</h1>
         <p className="text-lg">
-          مجموع تعداد بازدیدها: <strong>{totalCount}</strong>
+          Total View Count: <strong>{totalCount}</strong>
         </p>
 
-        <h2 className="text-lg font-semibold mt-5 mb-2">
-          تعداد کال شدن هر محصول
-        </h2>
+        <h2 className="text-lg font-semibold mt-5 mb-2">Product View Count</h2>
 
         <table className="w-full border-collapse border border-gray-300 mt-3">
           <thead>
             <tr className="bg-gray-200">
-              <th className="border border-gray-300 p-2">شناسه محصول</th>
-              <th className="border border-gray-300 p-2">عنوان محصول</th>
-              <th className="border border-gray-300 p-2">لینک محصول</th>
+              <th className="border border-gray-300 p-2">Product ID</th>
+              <th className="border border-gray-300 p-2">Product Title</th>
+              <th className="border border-gray-300 p-2">Product URL</th>
               <th
                 className="border border-gray-300 p-2 cursor-pointer"
                 onClick={handleSort}
               >
-                تعداد بازدید
-                {/* نشان دادن جهت مرتب‌سازی */}
+                View Count
                 {sortOrder === "desc" ? " ↓" : " ↑"}
               </th>
-              <th className="border border-gray-300 p-2">آخرین بازدید</th>
+              <th className="border border-gray-300 p-2">Last View</th>
             </tr>
           </thead>
           <tbody>
@@ -109,7 +102,7 @@ export default function AdminPanel() {
                     className="text-blue-600 underline"
                     target="_blank"
                   >
-                    مشاهده محصول
+                    View Product
                   </a>
                 </td>
                 <td className="border border-gray-300 p-2">{log.count}</td>
@@ -125,7 +118,7 @@ export default function AdminPanel() {
           onClick={handleDownloadExcel}
           className="mt-4 bg-blue-500 text-white px-4 py-2 rounded"
         >
-          دانلود فایل Excel
+          Download Excel File
         </button>
       </div>
     </>

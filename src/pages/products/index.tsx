@@ -5,19 +5,19 @@ import Head from "next/head";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
-  if (!res.ok) throw new Error("خطا در دریافت محصولات");
+  if (!res.ok) throw new Error("Error fetching products");
   return res.json();
 };
 
 const ProductPage = () => {
   const [page, setPage] = useState(1);
-  const limit = 10; // تعداد آیتم‌ها در هر صفحه
-  const totalPages = 10; // JSONPlaceholder حداکثر 100 محصول دارد (100 / 10 = 10)
+  const limit = 10;
+  const totalPages = 10;
 
   const { data, error } = useSWR(
     page <= totalPages
       ? `https://jsonplaceholder.typicode.com/posts?_page=${page}&_limit=${limit}`
-      : null, // درخواست‌های نامعتبر را متوقف می‌کنیم
+      : null,
     fetcher
   );
 
@@ -44,24 +44,23 @@ const ProductPage = () => {
           ))}
         </div>
 
-        {/* کنترل‌های صفحه‌بندی */}
         <div className="flex justify-between mt-4">
           <button
             onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
             disabled={page === 1}
             className="px-4 py-2 border rounded-md bg-gray-200 disabled:opacity-50"
           >
-            قبلی
+            Previous
           </button>
           <span className="px-4 py-2">
-            صفحه {page} از {totalPages}
+            Page {page} of {totalPages}
           </span>
           <button
             onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
             disabled={page === totalPages}
             className="px-4 py-2 border rounded-md bg-gray-200 disabled:opacity-50"
           >
-            بعدی
+            Next
           </button>
         </div>
       </div>

@@ -5,14 +5,14 @@ import Head from "next/head";
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
-  if (!res.ok) throw new Error("محصول پیدا نشد!");
+  if (!res.ok) throw new Error("Product not found!");
   return res.json();
 };
 
 const ProductDetail = () => {
   const router = useRouter();
   const { id } = router.query;
-  const hasLogged = useRef(false); // برای اطمینان از اینکه فقط یک بار لاگ ارسال شود
+  const hasLogged = useRef(false);
 
   const { data, error } = useSWR(
     id ? `https://jsonplaceholder.typicode.com/posts/${id}` : null,
@@ -21,7 +21,7 @@ const ProductDetail = () => {
 
   useEffect(() => {
     if (id && !hasLogged.current) {
-      hasLogged.current = true; // جلوگیری از اجرای مجدد
+      hasLogged.current = true;
       fetch("/api/log", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -30,8 +30,8 @@ const ProductDetail = () => {
     }
   }, [id]);
 
-  if (error) return <div className="text-red-500">محصول پیدا نشد!</div>;
-  if (!data) return <div>در حال بارگذاری...</div>;
+  if (error) return <div className="text-red-500">Product not found!</div>;
+  if (!data) return <div>Loading...</div>;
 
   return (
     <>

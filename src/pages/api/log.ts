@@ -19,14 +19,13 @@ interface LogEntry {
   timestamp: number;
 }
 
-// دریافت اطلاعات محصول از API
 const fetchProductInfo = async (
   productId: string
 ): Promise<{ title: string; url: string }> => {
   const res = await fetch(
     `https://jsonplaceholder.typicode.com/posts/${productId}`
   );
-  if (!res.ok) return { title: "عنوان نامشخص", url: "#" };
+  if (!res.ok) return { title: "Unknown title", url: "#" };
 
   const product = await res.json();
   return {
@@ -47,17 +46,15 @@ export default async function handler(
     }
 
     const { title, url } = await fetchProductInfo(productId);
-    const productRef = doc(db, "logs", productId); // مرجع داکیومنت برای این محصول
+    const productRef = doc(db, "logs", productId);
     const docSnap = await getDoc(productRef);
 
     if (docSnap.exists()) {
-      // اگر محصول وجود دارد، فقط count را افزایش بده
       await updateDoc(productRef, {
         count: docSnap.data().count + 1,
         timestamp: Date.now(),
       });
     } else {
-      // اگر وجود ندارد، محصول را ثبت کن
       const logData: LogEntry = {
         productId,
         productTitle: title,
@@ -74,7 +71,6 @@ export default async function handler(
 
   if (req.method === "GET") {
     try {
-      // مرتب‌سازی بر اساس تعداد بازدید (count)
       const logsQuery = query(collection(db, "logs"), orderBy("count", "desc"));
       const snapshot = await getDocs(logsQuery);
       const logs = snapshot.docs.map((doc) => doc.data());

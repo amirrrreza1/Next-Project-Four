@@ -1,9 +1,7 @@
-// lib/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
-// تنظیمات Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyA0nyFNX1yZACI-0PjGdtpxtDAHPLpz98k",
   authDomain: "product-log-f98ae.firebaseapp.com",
@@ -14,7 +12,6 @@ const firebaseConfig = {
   measurementId: "G-64BHWYVC4H",
 };
 
-// مقداردهی اولیه Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const analytics = typeof window !== "undefined" ? getAnalytics(app) : null;
