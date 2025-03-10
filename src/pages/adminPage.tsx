@@ -50,9 +50,49 @@ export default function AdminPanel() {
       })
     );
 
+    if (dataToExport.length === 0) {
+      alert("No logs to export");
+      return;
+    }
+
     const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+    const headerStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" } },
+      fill: { fgColor: { rgb: "4CAF50" } },
+      alignment: { horizontal: "center", vertical: "center" },
+    };
+
+    const dataStyle = {
+      alignment: { horizontal: "center" },
+      font: { color: { rgb: "000000" } },
+    };
+
+    for (let col = 0; col < 5; col++) {
+      const headerCell = ws[XLSX.utils.encode_cell({ r: 0, c: col })];
+      if (headerCell) headerCell.s = headerStyle;
+    }
+
+    for (let row = 1; row <= dataToExport.length; row++) {
+      for (let col = 0; col < 5; col++) {
+        const dataCell = ws[XLSX.utils.encode_cell({ r: row, c: col })];
+        if (dataCell) dataCell.s = dataStyle;
+      }
+    }
+
+    const wscols = [
+      { wch: 12 },
+      { wch: 40 },
+      { wch: 50 },
+      { wch: 15 },
+      { wch: 25 },
+    ];
+
+    ws["!cols"] = wscols;
+
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Logs");
+
     XLSX.writeFile(wb, "logs.xlsx");
   };
 
@@ -99,7 +139,7 @@ export default function AdminPanel() {
                 <td className="border border-gray-300 p-2">
                   <a
                     href={log.productUrl}
-                    className="text-blue-600 underline"
+                    className="text-blue-600"
                     target="_blank"
                   >
                     View Product

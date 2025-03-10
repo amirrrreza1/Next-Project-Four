@@ -22,9 +22,7 @@ interface LogEntry {
 const fetchProductInfo = async (
   productId: string
 ): Promise<{ title: string; url: string }> => {
-  const res = await fetch(
-    `https://jsonplaceholder.typicode.com/posts/${productId}`
-  );
+  const res = await fetch(`https://fakestoreapi.com/products/${productId}`);
   if (!res.ok) return { title: "Unknown title", url: "#" };
 
   const product = await res.json();
