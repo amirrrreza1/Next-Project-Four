@@ -15,10 +15,14 @@ interface LogEntry {
 export default function AdminPanel() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0); // مجموع تعداد بازدیدها
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc"); // تایپ صحیح برای ترتیب مرتب‌سازی
 
   useEffect(() => {
     // اطمینان از دریافت داده‌ها به صورت مرتب‌شده بر اساس count
-    const logsQuery = query(collection(db, "logs"), orderBy("count", "desc"));
+    const logsQuery = query(
+      collection(db, "logs"),
+      orderBy("count", sortOrder)
+    );
     const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
       const fetchedLogs: LogEntry[] = snapshot.docs.map((doc) => ({
         ...(doc.data() as LogEntry),
@@ -31,7 +35,7 @@ export default function AdminPanel() {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [sortOrder]);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString("fa-IR");
@@ -54,12 +58,16 @@ export default function AdminPanel() {
     XLSX.writeFile(wb, "logs.xlsx");
   };
 
+  // تغییر ترتیب مرتب‌سازی
+  const handleSort = () => {
+    setSortOrder(sortOrder === "desc" ? "asc" : "desc");
+  };
+
   return (
     <>
       <Head>
         <title>Admin Panel</title>
       </Head>
-      {" "}
       <div className="p-5">
         <h1 className="text-xl font-bold mb-4">پنل ادمین</h1>
         {/* نمایش مجموع تعداد بازدیدها */}
@@ -70,13 +78,21 @@ export default function AdminPanel() {
         <h2 className="text-lg font-semibold mt-5 mb-2">
           تعداد کال شدن هر محصول
         </h2>
+
         <table className="w-full border-collapse border border-gray-300 mt-3">
           <thead>
             <tr className="bg-gray-200">
               <th className="border border-gray-300 p-2">شناسه محصول</th>
               <th className="border border-gray-300 p-2">عنوان محصول</th>
               <th className="border border-gray-300 p-2">لینک محصول</th>
-              <th className="border border-gray-300 p-2">تعداد بازدید</th>
+              <th
+                className="border border-gray-300 p-2 cursor-pointer"
+                onClick={handleSort}
+              >
+                تعداد بازدید
+                {/* نشان دادن جهت مرتب‌سازی */}
+                {sortOrder === "desc" ? " ↓" : " ↑"}
+              </th>
               <th className="border border-gray-300 p-2">آخرین بازدید</th>
             </tr>
           </thead>
