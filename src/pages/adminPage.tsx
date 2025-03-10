@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { db } from "../lib/firebase";
 import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
 import * as XLSX from "xlsx";
@@ -14,92 +14,49 @@ interface LogEntry {
 
 export default function AdminPanel() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(0);
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const logsQuery = query(
       collection(db, "logs"),
       orderBy("count", sortOrder)
     );
-    const unsubscribe = onSnapshot(logsQuery, (snapshot) => {
-      const fetchedLogs: LogEntry[] = snapshot.docs.map((doc) => ({
-        ...(doc.data() as LogEntry),
-      }));
-      setLogs(fetchedLogs);
 
-      const total = fetchedLogs.reduce((sum, log) => sum + log.count, 0);
-      setTotalCount(total);
-      setLoading(false); // Set loading to false after data is fetched
+    return onSnapshot(logsQuery, (snapshot) => {
+      setLogs(snapshot.docs.map((doc) => ({ ...(doc.data() as LogEntry) })));
     });
-
-    return () => unsubscribe();
   }, [sortOrder]);
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp).toLocaleString("en-US");
-  };
+  const totalCount = useMemo(
+    () => logs.reduce((sum, log) => sum + log.count, 0),
+    [logs]
+  );
+
+  const sortedLogs = useMemo(() => {
+    return [...logs].sort((a, b) =>
+      sortOrder === "desc" ? b.count - a.count : a.count - b.count
+    );
+  }, [logs, sortOrder]);
+
+  const formatDate = (timestamp: number) =>
+    new Date(timestamp).toLocaleString("en-US");
 
   const handleDownloadExcel = () => {
-    const dataToExport = logs.map(
-      ({ productId, productTitle, productUrl, count, timestamp }) => ({
+    if (logs.length === 0) return alert("No logs to export");
+
+    const ws = XLSX.utils.json_to_sheet(
+      logs.map(({ productId, productTitle, productUrl, count, timestamp }) => ({
         "Product ID": productId,
         "Product Title": productTitle,
         "Product URL": productUrl,
         "View Count": count,
         "Last View": formatDate(timestamp),
-      })
+      }))
     );
-
-    if (dataToExport.length === 0) {
-      alert("No logs to export");
-      return;
-    }
-
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-
-    const headerStyle = {
-      font: { bold: true, color: { rgb: "FFFFFF" } },
-      fill: { fgColor: { rgb: "4CAF50" } },
-      alignment: { horizontal: "center", vertical: "center" },
-    };
-
-    const dataStyle = {
-      alignment: { horizontal: "center" },
-      font: { color: { rgb: "000000" } },
-    };
-
-    for (let col = 0; col < 5; col++) {
-      const headerCell = ws[XLSX.utils.encode_cell({ r: 0, c: col })];
-      if (headerCell) headerCell.s = headerStyle;
-    }
-
-    for (let row = 1; row <= dataToExport.length; row++) {
-      for (let col = 0; col < 5; col++) {
-        const dataCell = ws[XLSX.utils.encode_cell({ r: row, c: col })];
-        if (dataCell) dataCell.s = dataStyle;
-      }
-    }
-
-    const wscols = [
-      { wch: 12 },
-      { wch: 40 },
-      { wch: 50 },
-      { wch: 15 },
-      { wch: 25 },
-    ];
-
-    ws["!cols"] = wscols;
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Logs");
-
     XLSX.writeFile(wb, "logs.xlsx");
-  };
-
-  const handleSort = () => {
-    setSortOrder(sortOrder === "desc" ? "asc" : "desc");
   };
 
   return (
@@ -113,62 +70,55 @@ export default function AdminPanel() {
           Total View Count: <strong>{totalCount}</strong>
         </p>
 
-        <h2 className="text-lg font-semibold mt-5 mb-2 px-6">Product View Count</h2>
+        <h2 className="text-lg font-semibold mt-5 mb-2 px-6">
+          Product View Count
+        </h2>
 
-        {loading ? (
-          <div className="w-full h-screen absolute top-0 flex justify-center items-center bg-black/80">
-              <p className="text-3xl text-white font-semibold">
-                Loading Table...
-              </p>
-          </div>
-        ) : (
-          <table className="w-[95%] m-auto border-collapse border border-gray-300 mt-3">
-            <thead>
-              <tr className="bg-gray-200">
-                <th className="border border-gray-300 p-2">Product ID</th>
-                <th className="border border-gray-300 p-2">Product Title</th>
-                <th className="border border-gray-300 p-2">Product URL</th>
-                <th
-                  className="border border-gray-300 p-2 cursor-pointer"
-                  onClick={handleSort}
-                >
-                  View Count
-                  {sortOrder === "desc" ? " ↓" : " ↑"}
-                </th>
-                <th className="border border-gray-300 p-2">Last View</th>
+        <table className="w-[95%] m-auto border-collapse border border-gray-300 mt-3">
+          <thead>
+            <tr className="bg-gray-200">
+              <th className="border border-gray-300 p-2">Product ID</th>
+              <th className="border border-gray-300 p-2">Product Title</th>
+              <th className="border border-gray-300 p-2">Product URL</th>
+              <th
+                className="border border-gray-300 p-2 cursor-pointer"
+                onClick={() =>
+                  setSortOrder(sortOrder === "desc" ? "asc" : "desc")
+                }
+              >
+                View Count {sortOrder === "desc" ? "↓" : "↑"}
+              </th>
+              <th className="border border-gray-300 p-2">Last View</th>
+            </tr>
+          </thead>
+          <tbody>
+            {sortedLogs.map((log, index) => (
+              <tr key={index} className="text-center">
+                <td className="border border-gray-300 p-2">{log.productId}</td>
+                <td className="border border-gray-300 p-2">
+                  {log.productTitle}
+                </td>
+                <td className="border border-gray-300 p-2">
+                  <a
+                    href={log.productUrl}
+                    className="text-blue-600"
+                    target="_blank"
+                  >
+                    View Product
+                  </a>
+                </td>
+                <td className="border border-gray-300 p-2">{log.count}</td>
+                <td className="border border-gray-300 p-2">
+                  {formatDate(log.timestamp)}
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {logs.map((log, index) => (
-                <tr key={index} className="text-center">
-                  <td className="border border-gray-300 p-2">
-                    {log.productId}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    {log.productTitle}
-                  </td>
-                  <td className="border border-gray-300 p-2">
-                    <a
-                      href={log.productUrl}
-                      className="text-blue-600"
-                      target="_blank"
-                    >
-                      View Product
-                    </a>
-                  </td>
-                  <td className="border border-gray-300 p-2">{log.count}</td>
-                  <td className="border border-gray-300 p-2">
-                    {formatDate(log.timestamp)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
+            ))}
+          </tbody>
+        </table>
 
         <button
           onClick={handleDownloadExcel}
-          className="m-6 bg-green-500 text-white px-6 py-2 rounded "
+          className="m-6 bg-green-500 text-white px-6 py-2 rounded"
         >
           Download Excel File
         </button>
